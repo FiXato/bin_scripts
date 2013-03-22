@@ -1,0 +1,30 @@
+#!/bin/bash
+# encoding: utf-8
+# Find files larger than specified amount in given location and its subdirectories.
+DEFAULT_MIN_SIZE=100M
+DEFAULT_SEARCH_PATH=~/
+filename=$(basename ${BASH_SOURCE[0]})
+min_size=${1:-$DEFAULT_MIN_SIZE}
+path=${2:-$DEFAULT_SEARCH_PATH}
+
+function echo_usage {
+  echo "Usage:"
+  echo "---------"
+  echo "$filename MIN_SIZE START_PATH"
+  echo ""
+  echo "Notes:"
+  echo "---------"
+  echo "MIN_SIZE supports following suffixes: 'b' (512-byte blocks (default)), 'c' (bytes), 'w' (two-byte words), 'k' (1024 (kilo) bytes)), 'M' (1048576 (Mega) bytes), 'G' (1073741824 (Giga) bytes)"
+  echo "MIN_SIZE defaults to 100M and START_PATH to ~/"
+  echo ""
+  echo "Examples:"
+  echo "---------"
+  echo "Find files larger than 200 kilobytes in your bindir and its subdirs:" 
+  echo "  $filename 200k ~/bin/"
+  echo "Find files larger than 200 megabytes across all your partitions:"
+  echo "  sudo $filename 200M /"
+  echo "Find files larger than 100 megabytes in your homedir and its subdirs (the defaults):"
+  echo "  $filename"
+}
+
+([ "$1" == "--help" ] || [ "$1" == "-h" ] || [ "$1" == "-?" ]) && (echo_usage && exit 0) || (echo "Searching for files larger than $min_size in $path" && find $path -type f -size +$min_size -exec ls -lh {} \; | awk '{ print $8 $9 $10 $11 $12 " : " $5 }')
