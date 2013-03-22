@@ -1,0 +1,124 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+IGNORE_DUPLICATES = 'off'
+
+try:
+    import sys, os, string, time, datetime, socket, re, base64, cgi, sqlite3, urlparse, urllib, htmlentitydefs
+except ImportError as message:
+    print('Missing package(s) for %s: %s' % (SCRIPT_NAME, message))
+    import_ok = False
+
+def regexp(expr, item):
+    reg = re.compile(expr)
+    return reg.search(item) is not None
+
+class urldb(object):
+
+    def __init__(self):
+        filename = os.path.expanduser(os.path.join('~', '.weechat-phone', 'urlserver.sqlite3'))
+        print filename
+        self.conn = sqlite3.connect(filename)
+        self.cursor = self.conn.cursor()
+        self.conn.create_function("REGEXP", 2, regexp)
+        try:
+            self.cursor.execute('''CREATE TABLE urls
+                             (number integer PRIMARY KEY AUTOINCREMENT,
+                             time integer,
+                             nick text,
+                             buffer_name text,
+                             url text,
+                             message text,
+                             prefix text)''')
+            self.conn.commit()
+        except sqlite3.OperationalError, e:
+            # Table already exists
+            pass
+
+    def items(self, order_by='time', search='', page=1, amount=100):
+        offset = page * amount - amount
+        if IGNORE_DUPLICATES == 'on':
+            distinct = 'GROUP BY url'
+        else:
+            distinct = ''
+        if search:
+            search ='''
+            WHERE
+                buffer_name REGEXP '%s'
+            OR
+                url REGEXP '%s'
+            OR
+                message REGEXP '%s'
+            OR
+                nick REGEXP '%s'
+                    ''' %(search, search, search, search)
+        sql ='''
+            SELECT
+            url, number, time, nick, buffer_name, message, prefix
+            FROM urls
+            %s
+            %s
+            ORDER BY %s desc
+            LIMIT %s OFFSET %s''' %(search, distinct, order_by, amount, offset)
+        print 'urlserver: SQL: %s' % sql
+        execute = self.cursor.execute(sql)
+        return self.cursor.fetchall()
+
+    def get(self, number):
+        execute = self.cursor.execute('''
+            SELECT * FROM urls WHERE number = "%s"''' %number)
+        row = self.cursor.fetchone()
+        return row
+
+    def insert(self, time, nick, buffer_name, url, message, prefix):
+        nick = nick.decode('UTF-8')
+        buffer_name = buffer_name.decode('UTF-8')
+        url = url.decode('UTF-8')
+        message = message.decode('UTF-8')
+        execute = self.cursor.execute('''
+            INSERT INTO urls
+            VALUES (NULL, ?, ?, ?, ?, ?, ?)''',
+            (time, nick, buffer_name, url, message, prefix))
+        self.conn.commit()
+        return self.cursor.lastrowid
+
+    def close(self):
+        self.conn.commit()
+        self.cursor.close()
+        self.conn.close()
+
+    @property
+    def rowcount(self):
+        return self.cursor.rowcount
+
+search = ''
+page = 1
+amount = 50
+
+db = urldb()
+if len(sys.argv) < 2:
+	exit()
+
+if sys.argv[1] == 'list':
+	urls = db.items(search=search, page=page, amount=amount)
+	for item in urls:
+	    url = item[0]
+	    key = item[1]
+	    timestamp = item[2]
+	    nick = item[3]
+	    time = datetime.datetime.fromtimestamp(timestamp)
+	    buffer_name = item[4]
+	    if not nick: # Message without nick tag set, use prefix instead
+	        nick = item[6]
+	    message = cgi.escape(item[5]).split('\t', 1)
+	    print '[%s] %s:\n     [%s] <%s> %s' % (key, url, time, nick, message)
+elif sys.argv[1] == 'add':
+	if len(sys.argv) < 3:
+		print "Missing a URL"
+		exit()
+	nick = 'CLI'
+	prefix = nick
+	buffer = 'FiXato.org.CLI'
+	url = str(sys.argv[2])
+	message = ' '.join(sys.argv[2:])
+	db.insert(int(time.time()), nick, buffer, url, message, prefix)
+db.close()

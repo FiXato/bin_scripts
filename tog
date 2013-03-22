@@ -1,0 +1,108 @@
+#!/usr/bin/env ruby
+#encoding: utf-8
+# Get train delays for given route between any NSB trainstation in Norway.
+# Usage: `tog <predefined_route|departure_station arrival_station>`
+# Example: `tog Rognan Bodø`
+
+require 'nokogiri'
+require 'open-uri'
+require 'uri'
+
+URLS = {
+
+  :rognan_bodoe => "http://www.nsb.no/toget_i_rute/?ontime-from=Rognan&ontime-to=BOD%C3%98&ontime-submit_form=Vis+sanntidsinformasjon",
+#  :rognan_bodoe => "http://m.nsb.no/?departure_station=rognan&arrival_station=BOD%C3%98&submit_train_on_schedule=&name=nsb&i=9694",
+#  :bodoe_rognan => "http://m.nsb.no/?departure_station=BOD%C3%98&arrival_station=rognan&submit_train_on_schedule=&name=nsb&i=9694",
+  :bodoe_rognan => "http://www.nsb.no/toget_i_rute/?ontime-from=BOD%C3%98&ontime-to=Rognan&ontime-submit_form=Vis+sanntidsinformasjon",
+}
+
+if ARGV.size == 1
+  route = ARGV[0].to_sym
+  unless URLS.keys.include?(route)
+    route = :rognan_bodoe
+    puts "Route #{route} unknown; defaulting to #{route}"
+  end
+  url = URLS[route]
+elsif ARGV.size >= 2
+  departure = URI::encode(ARGV[0])
+  arrival = URI::encode(ARGV[1])
+  page = ARGV[2].to_i
+  time_from = Time.now + (172800 * page)
+  time_to = time_from + 172800
+#  url = "http://m.nsb.no/?departure_station=%s&arrival_station=%s&submit_train_on_schedule=1&name=nsb&i=9694&d=%i" % [departure, arrival, page]
+  url = "http://www.nsb.no/toget_i_rute/?ontime-from=%s&ontime-to=%s&ontime-submit_form=Vis+sanntidsinformasjon" % [departure, arrival]
+  if page > 0
+    url += "&queryId=%ito%i&direction=next" % [time_from, time_to]
+  end
+else
+  abort("Either supply a single route parameter (one of #{URLS.keys.join(", ")}) or just supply the departure and arrival stations.")
+end
+
+puts url
+doc = Nokogiri::HTML(req = open(url, "Referer" => url))
+if page.to_i > 0
+  doc = Nokogiri::HTML(open(url, "Referer" => url, "Cookie" => req.meta['set-cookie'].split('; ',2)[0]))
+end
+
+#FIXME: find which are the proper error elements in the new website layout
+errors = doc.css('.errors_routes .error_routes')
+if errors.size > 0
+  errors.each do |error|
+    puts 'Error: %s' % error.text
+  end
+  abort("We encountered an error while requesting the route")
+end
+
+route = doc.at_css('#timetable-status h2').text
+puts "Train route and delay info for #{route}"
+schedules = []
+doc.css('#timetable-status tr').each do |timetable_row|
+  if day_change = timetable_row.at_xpath('.//th[@colspan=2]')
+    schedules << "\037For #{day_change.text.to_s.strip}:\037"
+  end
+  next unless (timetable_row['class'].split.include?('option') rescue false)
+  travel_option = timetable_row
+  schedule = '  ' + 2.chr
+  departure = travel_option.at_css('.depart')
+  departure_time = departure.at_css('strong')
+  departure_time.remove
+  schedule += departure.text.to_s.strip
+  schedule += ' %s' % departure_time.text.to_s.strip
+  schedule += 2.chr
+
+  schedule += ' -> '
+
+  arrival = travel_option.at_css('.arrive')
+  arrival_time_old = arrival.at_css('strong del') rescue nil
+  arrival_time_new = arrival.at_css('strong ins') rescue nil
+  [arrival_time_old, arrival_time_new].each{|el|el.remove rescue nil}
+  arrival_time = arrival.at_css('strong') rescue nil
+  arrival_time.remove rescue nil
+  schedule += 2.chr + arrival.text.strip + 2.chr
+  schedule += 2.chr + (' %s' % arrival_time_new.text.to_s.strip) + 2.chr if arrival_time_new
+  schedule += ' (was %s)' % arrival_time_old.text.to_s.strip if arrival_time_old
+  schedule += 2.chr + (' %s' % arrival_time.text.to_s.strip) + 2.chr
+  
+  train = travel_option.at_css('.train')
+  track = train.at_css('.platform')
+  track.remove
+  schedule += " " * (45 - schedule.size) if schedule.size < 45
+  schedule += "#{train.text.to_s.strip} #{track['title'].to_s.strip}"
+  
+  schedule += " " * (85 - schedule.size) if schedule.size < 85
+  schedule += ' ' + 2.chr + '[Status]: ' + 2.chr + 22.chr + travel_option.at_css('.status').text.to_s.strip + 22.chr
+  
+  schedules << schedule
+end
+
+# delay_strings = []
+# delays = doc.css('.travel_delay')
+# delays.each do |delay|
+#   overview = delay.css('.overview').text.gsub(/\s/,' ').squeeze(' ')
+#   details = delay.css('.details').text.gsub(/\s/,' ').squeeze(' ')
+#   delay_strings << '$s (%s)' % [details, overview]
+#   puts "\002%s\002 (%s)" % [details, overview]
+# end
+cmd = "urlserver add \"#{url}\" \"TOG #{ARGV.join(' ')} RESULTS:\n #{schedules.join("\n")}\""
+`#{cmd}` 
+puts schedules.join("\n")
