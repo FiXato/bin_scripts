@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+ARGV.each do |filename|
+  filepath = File.expand_path(filename)
+  filename = File.basename(filepath)
+  dirname = File.dirname(filepath)
+  puts "MD5:" + `cd "#{dirname}" && md5 "#{filename}"`
+  puts "MD5:" + `cd "#{dirname}" && md5sum "#{filename}"`
+  puts "SHASUM:" + `cd "#{dirname}" && shasum "#{filename}"`
+  puts "SHA1SUM:" + `cd "#{dirname}" && sha1sum "#{filename}"`
+  puts "SHA512SUM:" + `cd "#{dirname}" && sha512sum "#{filename}"`
+end
