@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
+# MathText
+#Inspired by fliptext.rb (https://gist.github.com/FiXato/525297) and Sai's post on G+ https://plus.google.com/u/0/103112149634414554669/posts/V7zxyRYg2EB which mentioned Fraktur symbols in Unicode.
 begin
 
 # Hack to prevent useless iconv warning from showing up in 1.9
@@ -15,10 +17,10 @@ LATIN_RANGES = {
 MATHEMATICAL_RANGES = {
   :bold => [119808..119833, 119834..119859],
   :italic => [119860..119885, 119886..119911],
-  :bold_italic => [119912..119937, 119938..119963],
+  :italic_bold => [119912..119937, 119938..119963],
 
   :script => [119964..119989, 119990..120015],
-  :bold_script => [120016..120041, 120042..120067],
+  :script_bold => [120016..120041, 120042..120067],
 
   :fraktur_bold => [120172..120197, 120198..120223],
   :fraktur => [120068..120093, 120094..120119],
@@ -46,4 +48,4 @@ end
 puts output
 rescue Exception
   abort "error while running script"
-end
+
