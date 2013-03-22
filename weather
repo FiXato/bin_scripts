@@ -1,0 +1,30 @@
+#!/usr/bin/env ruby
+#encoding: utf-8
+$:.unshift File.dirname(__FILE__)
+require 'barometer'
+require 'weather_formatter'
+
+sources = []
+
+argument_sources = (ARGV.shift||'all')
+argument_sources.split(',').each do |source|
+  sources << :wunderground if source == 'wunderground'
+  sources << :yahoo if source == 'yahoo'
+#  sources << :google if source == 'google'
+#  sources = [:wunderground, :google] if source == 'all'
+  sources = [:wunderground] if source == 'all'
+end
+
+abort("You need to specify a valid source as first parameter: wunderground, or all. Separate multiple ones with commas") if sources.size == 0
+
+Barometer.config = { 1 => sources }
+target = "Bodo, Norway"
+target = ARGV.join(" ") if ARGV.size > 0
+begin
+  barometer = Barometer.new(target)
+  w = barometer.measure
+  wf = WeatherFormatter.new
+  wf.get_results(w)
+rescue Exception => e
+  abort("Error while getting weather info for #{target}: #{e.message}")
+end
