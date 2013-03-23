@@ -8,6 +8,20 @@ require 'nokogiri'
 require 'open-uri'
 require 'uri'
 
+@indent_level = 0
+
+def inc_indent_level
+  @indent_level += 1
+end
+
+def dec_indent_level
+  @indent_level -= 1 if @indent_level > 0
+end
+
+def indent
+  '  ' * @indent_level
+end
+
 URLS = {
 
   :rognan_bodoe => "http://www.nsb.no/toget_i_rute/?ontime-from=Rognan&ontime-to=BOD%C3%98&ontime-submit_form=Vis+sanntidsinformasjon",
@@ -57,42 +71,92 @@ route = doc.at_css('#timetable-status h2').text
 puts "Train route and delay info for #{route}"
 schedules = []
 doc.css('#timetable-status tr').each do |timetable_row|
+  schedule = ''
   if day_change = timetable_row.at_xpath('.//th[@colspan=2]')
+    dec_indent_level
     schedules << "\037For #{day_change.text.to_s.strip}:\037"
+    inc_indent_level
   end
-  next unless (timetable_row['class'].split.include?('option') rescue false)
+  css_classes = timetable_row['class'].split rescue []
+  next unless (css_classes.include?('option') || css_classes.include?('section'))
   travel_option = timetable_row
-  schedule = '  ' + 2.chr
   departure = travel_option.at_css('.depart')
-  departure_time = departure.at_css('strong')
-  departure_time.remove
-  schedule += departure.text.to_s.strip
-  schedule += ' %s' % departure_time.text.to_s.strip
-  schedule += 2.chr
-
-  schedule += ' -> '
+  departure_time_old = departure.at_css('strong del') rescue nil
+  departure_time_new = departure.at_css('strong ins') rescue nil
+  [departure_time_old, departure_time_new].each{|el|el.remove rescue nil}
+  departure_time_fallback = departure.at_css('strong') rescue nil
+  departure_time_fallback.remove rescue nil
+  departure_time = departure_time_new || departure_time_fallback
 
   arrival = travel_option.at_css('.arrive')
   arrival_time_old = arrival.at_css('strong del') rescue nil
   arrival_time_new = arrival.at_css('strong ins') rescue nil
   [arrival_time_old, arrival_time_new].each{|el|el.remove rescue nil}
-  arrival_time = arrival.at_css('strong') rescue nil
-  arrival_time.remove rescue nil
-  schedule += 2.chr + arrival.text.strip + 2.chr
-  schedule += 2.chr + (' %s' % arrival_time_new.text.to_s.strip) + 2.chr if arrival_time_new
-  schedule += ' (was %s)' % arrival_time_old.text.to_s.strip if arrival_time_old
-  schedule += 2.chr + (' %s' % arrival_time.text.to_s.strip) + 2.chr
-  
+  arrival_time_fallback = arrival.at_css('strong') rescue nil
+  arrival_time_fallback.remove rescue nil
+  arrival_time = arrival_time_new || arrival_time_fallback
+
   train = travel_option.at_css('.train')
   track = train.at_css('.platform')
-  track.remove
-  schedule += " " * (45 - schedule.size) if schedule.size < 45
-  schedule += "#{train.text.to_s.strip} #{track['title'].to_s.strip}"
-  
-  schedule += " " * (85 - schedule.size) if schedule.size < 85
-  schedule += ' ' + 2.chr + '[Status]: ' + 2.chr + 22.chr + travel_option.at_css('.status').text.to_s.strip + 22.chr
-  
-  schedules << schedule
+  track.remove unless track.nil?
+  track_number = track['title'].gsub("Toget går fra spor ",'') rescue nil
+  status_message = travel_option.at_css('.status').text.to_s.strip.gsub(/[\s]/, ' ').gsub(/[\s]+/,' ') rescue ''
+
+  if timetable_row['class'].split.include?('transfer')
+    schedule += indent
+    dec_indent_level
+    trajectory_details = travel_option.next_sibling
+    # Trajectory Departure Time(s)
+    schedule += '[' + 2.chr + ('%s' % departure_time.text.to_s.strip) + 2.chr
+    schedule += ' (was %s)' % departure_time_old.text.to_s.strip if departure_time_old
+    schedule += ' -> '
+
+    # Trajectory Arrival Time(s)
+    schedule += 2.chr + ('%s' % arrival_time.text.to_s.strip) + 2.chr
+    schedule += ' (was %s)' % arrival_time_old.text.to_s.strip if arrival_time_old
+    schedule += " - Trajectory Details: #{trajectory_details.text.to_s.strip}]"
+    inc_indent_level
+
+    schedules << schedule
+  else
+    inc_indent_level
+    # Oslo S, Spor 14 16:06 (was 16:02)  -> Trondheim S 22:44 Oslo S–Trondheim S Toget går fra spor 16
+    # Train:
+    schedule += indent
+    schedule += 2.chr + "[#{train.text.to_s.strip} Toget] " + 2.chr
+
+    # Departure station + track
+    schedule += departure.text.strip if departure
+    schedule += ', Spor %i' % track_number unless track_number.to_i == 0
+
+    # Departure Time(s)
+    schedule += ' @ '
+    schedule += 2.chr + ('%s' % departure_time.text.to_s.strip) + 2.chr
+    schedule += ' (was %s) ' % departure_time_old.text.to_s.strip if departure_time_old
+
+    schedule += ' -> '
+
+    # Arrival station
+    schedule += arrival.text.strip if arrival
+
+    # Arrival Time(s)
+    schedule += ' @ '
+    schedule += 2.chr + ('%s' % arrival_time.text.to_s.strip) + 2.chr
+    schedule += ' (was %s)' % arrival_time_old.text.to_s.strip if arrival_time_old
+
+    # Train's status
+    if status_message.to_s != '' && status_message.to_s != '-' 
+      inc_indent_level
+      schedule += "\n"
+      schedule += indent
+      schedule += 2.chr + '[Status]: ' + 2.chr
+      schedule += 22.chr + status_message + 22.chr + "\n"
+      dec_indent_level
+    end
+    dec_indent_level
+    
+    schedules << schedule
+  end
 end
 
 # delay_strings = []
