@@ -76,25 +76,25 @@ Inspired by [fliptext.rb](https://gist.github.com/FiXato/525297) and [Sai's post
 
 ### Examples:
 `mathtext.rb script_bold "This is script bold :)"`
-𝓣𝓱𝓲𝓼 𝓲𝓼 𝓼𝓬𝓻𝓲𝓹𝓽 𝓫𝓸𝓵𝓭 :)
+`𝓣𝓱𝓲𝓼 𝓲𝓼 𝓼𝓬𝓻𝓲𝓹𝓽 𝓫𝓸𝓵𝓭 :)`
 
 `mathtext.rb script "This is script :)"`
-𝒯𝒽𝒾𝓈 𝒾𝓈 𝓈𝒸𝓇𝒾𝓅𝓉 :)
+`𝒯𝒽𝒾𝓈 𝒾𝓈 𝓈𝒸𝓇𝒾𝓅𝓉 :)`
 
 `mathtext.rb fraktur "This is fraktur :)"`
-𝔗𝔥𝔦𝔰 𝔦𝔰 𝔣𝔯𝔞𝔨𝔱𝔲𝔯 :)
+`𝔗𝔥𝔦𝔰 𝔦𝔰 𝔣𝔯𝔞𝔨𝔱𝔲𝔯 :)`
 
 `mathtext.rb fraktur_bold "This is fraktur bold :)"`
-𝕿𝖍𝖎𝖘 𝖎𝖘 𝖋𝖗𝖆𝖐𝖙𝖚𝖗 𝖇𝖔𝖑𝖉 :)
+`𝕿𝖍𝖎𝖘 𝖎𝖘 𝖋𝖗𝖆𝖐𝖙𝖚𝖗 𝖇𝖔𝖑𝖉 :)`
 
 `mathtext.rb italic_bold "This is italic bold :)"`
-𝑻𝒉𝒊𝒔 𝒊𝒔 𝒊𝒕𝒂𝒍𝒊𝒄 𝒃𝒐𝒍𝒅 :)
+`𝑻𝒉𝒊𝒔 𝒊𝒔 𝒊𝒕𝒂𝒍𝒊𝒄 𝒃𝒐𝒍𝒅 :)`
 
 `mathtext.rb italic "This is italic :)"`
-𝑇𝑕𝑖𝑠 𝑖𝑠 𝑖𝑡𝑎𝑙𝑖𝑐 :)
+`𝑇𝑕𝑖𝑠 𝑖𝑠 𝑖𝑡𝑎𝑙𝑖𝑐 :)`
 
 `mathtext.rb bold "This is bold :)"`
-𝐓𝐡𝐢𝐬 𝐢𝐬 𝐛𝐨𝐥𝐝 :)
+`𝐓𝐡𝐢𝐬 𝐢𝐬 𝐛𝐨𝐥𝐝 :)`
 
 ## urlserver
 CLI Python script which can be used to add urls/messages to your local urlserver database, which can be used by the [urlserver.py WeeChat script](https://github.com/torhve/weechat-urls).
