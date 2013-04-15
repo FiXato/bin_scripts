@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+
+    <title>Bin scripts by FiXato</title>
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <h1>Bin scripts</h1>
+        <h2>A bunch of ~/bin utilities</h2>
+
+        <section id="downloads">
+          <a href="https://github.com/FiXato/bin_scripts/zipball/master" class="btn">Download as .zip</a>
+          <a href="https://github.com/FiXato/bin_scripts/tarball/master" class="btn">Download as .tar.gz</a>
+          <a href="https://github.com/FiXato/bin_scripts" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+        </section>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="main_content">
+        <h1>~/bin scripts</h1>
+
+<h1></h1>
+
+<p>A bunch of ~/bin utilities for Linux (though most will probably work on Mac OS X too).
+Several of them will need Ruby as well as certain Ruby gems.</p>
+
+<h2>age</h2>
+
+<p>A CLI Ruby script that returns your (Terran) age in various descriptions, based on your date of birth.
+To get your own age, configure the script with your date (and possibly even hour!) of birth and call the script without any arguments.
+You can also pass some date in the past to get the time that has passed since that time, for instance to get someone else's age.</p>
+
+<h3>Examples:</h3>
+
+<pre><code>$ age
+I was born 15786.81 Terran days, or 378883 hours and roughly 32 minutes ago. This makes me about 22733012 minutes (or about 43.22 Terran years) old
+$ age 2 November 1981
+You were born 11463.82 Terran days, or 275131 hours and roughly 33 minutes ago. This makes you about 16507893 minutes (or about 31.39 Terran years) old
+</code></pre>
+
+<h3>Dependencies:</h3>
+
+<ul>
+<li>
+<em>Rubygems:</em>
+
+<ul>
+<li>chronic</li>
+</ul>
+</li>
+</ul><h2>checksums</h2>
+
+<p>CLI Ruby script that returns various checksum (MD5, SHAsum, SHA1sum, sha512sum)</p>
+
+<h3>Dependencies:</h3>
+
+<ul>
+<li>
+<em>Commandline tools:</em>
+
+<ul>
+<li>md5 and/or md5sum commandline tool</li>
+<li>shasum and/or sha1sum commandline tool</li>
+<li>sha512sum commandline tool</li>
+</ul>
+</li>
+</ul><h2>convert_units.rb</h2>
+
+<p>CLI Ruby script that converts various temperature and other units.
+Started as a temperature conversion tool to convert degrees Fahrenheit to various other temperature scales and ended up getting a fallback to the <em>ruby-units</em> gem for conversion of various other units.</p>
+
+<h3>Dependencies:</h3>
+
+<ul>
+<li>
+<em>Rubygems:</em>
+
+<ul>
+<li>ruby-units</li>
+</ul>
+</li>
+</ul><h2>find_larger_than</h2>
+
+<p>CLI Bash script that helps you find the large files that are hogging your disk space.</p>
+
+<h3>Usage:</h3>
+
+<p><code>find_larger_than MIN_SIZE START_PATH</code>
+<em>MIN_SIZE</em> supports following suffixes: </p>
+
+<ul>
+<li>
+<em>'b'</em> (512-byte blocks (default))</li>
+<li>
+<em>'c'</em> (bytes)</li>
+<li>
+<em>'w'</em> (two-byte words)</li>
+<li>
+<em>'k'</em> (1024 (kilo) bytes))</li>
+<li>
+<em>'M'</em> (1048576 (Mega) bytes)</li>
+<li>
+<em>'G'</em> (1073741824 (Giga) bytes)
+<em>MIN_SIZE</em> defaults to 100M and START_PATH to ~/</li>
+</ul><h3>Examples:</h3>
+
+<h4>Find files larger than 200 kilobytes in your bindir and its subdirs:</h4>
+
+<p><code>find_larger_than 200k ~/bin/</code></p>
+
+<h4>Find files larger than 200 megabytes across all your partitions:</h4>
+
+<p><code>sudo find_larger_than 200M /</code></p>
+
+<h4>Find files larger than 100 megabytes in your homedir and its subdirs (the defaults):</h4>
+
+<p><code>find_larger_than</code></p>
+
+<h3>Dependencies:</h3>
+
+<ul>
+<li>
+<code>find</code> commandline tool.</li>
+</ul><h2>fliptext.rb</h2>
+
+<p>CLI Ruby script which converts your text into Unicode glyphs that makes your text look like it's upsidedown.
+Based on the javascript code from <a href="http://www.revfad.com/flip.html">http://www.revfad.com/flip.html</a></p>
+
+<h2>mathtext.rb</h2>
+
+<p>CLI Ruby script that converts your text into Unicode glyphs from the bold, bold-italic, script, script-italic, fraktur or fraktur-bold mathematical character ranges.
+Inspired by <a href="https://gist.github.com/FiXato/525297">fliptext.rb</a> and <a href="https://plus.google.com/u/0/103112149634414554669/posts/V7zxyRYg2EB">Sai's post on G+</a> which mentioned Fraktur symbols in Unicode.</p>
+
+<h3>Usage:</h3>
+
+<p><code>mathtext.rb format "Your string here"</code></p>
+
+<h3>Examples:</h3>
+
+<p><code>mathtext.rb script_bold "This is script bold :)"</code>
+<code>𝓣𝓱𝓲𝓼 𝓲𝓼 𝓼𝓬𝓻𝓲𝓹𝓽 𝓫𝓸𝓵𝓭 :)</code></p>
+
+<p><code>mathtext.rb script "This is script :)"</code>
+<code>𝒯𝒽𝒾𝓈 𝒾𝓈 𝓈𝒸𝓇𝒾𝓅𝓉 :)</code></p>
+
+<p><code>mathtext.rb fraktur "This is fraktur :)"</code>
+<code>𝔗𝔥𝔦𝔰 𝔦𝔰 𝔣𝔯𝔞𝔨𝔱𝔲𝔯 :)</code></p>
+
+<p><code>mathtext.rb fraktur_bold "This is fraktur bold :)"</code>
+<code>𝕿𝖍𝖎𝖘 𝖎𝖘 𝖋𝖗𝖆𝖐𝖙𝖚𝖗 𝖇𝖔𝖑𝖉 :)</code></p>
+
+<p><code>mathtext.rb italic_bold "This is italic bold :)"</code>
+<code>𝑻𝒉𝒊𝒔 𝒊𝒔 𝒊𝒕𝒂𝒍𝒊𝒄 𝒃𝒐𝒍𝒅 :)</code></p>
+
+<p><code>mathtext.rb italic "This is italic :)"</code>
+<code>𝑇𝑕𝑖𝑠 𝑖𝑠 𝑖𝑡𝑎𝑙𝑖𝑐 :)</code></p>
+
+<p><code>mathtext.rb bold "This is bold :)"</code>
+<code>𝐓𝐡𝐢𝐬 𝐢𝐬 𝐛𝐨𝐥𝐝 :)</code></p>
+
+<h2>urlserver</h2>
+
+<p>CLI Python script which can be used to add urls/messages to your local urlserver database, which can be used by the <a href="https://github.com/torhve/weechat-urls">urlserver.py WeeChat script</a>.</p>
+
+<h3>Dependencies:</h3>
+
+<ul>
+<li>sqlite database</li>
+<li>
+<em>Python libraries:</em>
+
+<ul>
+<li>sys</li>
+<li>os</li>
+<li>string</li>
+<li>time</li>
+<li>datetime</li>
+<li>socket</li>
+<li>re</li>
+<li>base64</li>
+<li>cgi</li>
+<li>sqlite3</li>
+<li>urlparse</li>
+<li>urllib</li>
+<li>htmlentitydefs</li>
+</ul>
+</li>
+</ul><h2>tog</h2>
+
+<p>CLI Ruby script to look up if NSB.no trains are still on time and to display their departure times. Ties into the urlserver script.
+Get train delays for given route between any NSB trainstation in Norway.</p>
+
+<h2>Usage:</h2>
+
+<p><code>tog &lt;predefined_route|departure_station arrival_station&gt;</code></p>
+
+<h2>Example:</h2>
+
+<p><code>tog Oslo Fauske</code></p>
+
+<h2>Dependencies:</h2>
+
+<ul>
+<li>
+<em>Ruby gems:</em>
+
+<ul>
+<li>Nokogiri</li>
+</ul>
+</li>
+<li>Standard Ruby libraries:
+
+<ul>
+<li>open-uri</li>
+<li>uri</li>
+</ul>
+</li>
+<li>urlserver CLI Python tool (though this requirement can easily be disabled)</li>
+</ul><h2>weather</h2>
+
+<p>Wrapper around weather_formatter.rb and barometer. Supports reports local weather from various sources.</p>
+
+<h3>weather_formatter.rb</h3>
+
+<p>Formats the output for the weather wrapper</p>
+
+<h3>Dependencies:</h3>
+
+<ul>
+<li>
+<em>Ruby gems:</em>
+
+<ul>
+<li>barometer</li>
+</ul>
+</li>
+</ul>
+      </section>
+    </div>
+
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-17320621-4");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
