@@ -25,6 +25,9 @@ MATHEMATICAL_RANGES = {
   :fraktur_bold => [120172..120197, 120198..120223],
   :fraktur => [120068..120093, 120094..120119],
 }
+if ARGV.size < 2
+  abort("You need to supply a transliteration/conversion type and the text you want processed.\nSyntax: mathtext.rb conversionType text to process.\nExample: mathtext.rb script_bold This will appear in bold script unicode glyphs\n\nSupported conversion types: #{(LATIN_RANGES.keys + MATHEMATICAL_RANGES.keys).map{|k|k.to_s}.join(', ')}")
+end
 translitator = Iconv.new("ASCII//TRANSLIT//IGNORE", "UTF-8")
 conversion = ARGV.shift.to_sym
 # puts conversion
