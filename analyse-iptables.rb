@@ -57,15 +57,16 @@ class AnalyseIptables
     end
   end
 
+#TODO: Tweak padding/alignment
   def puts_packets_for_IP(ip,type=:all,count=10)
       cmd = "grep -F \"#{ip}\" \"#{logfile}\""
       cmd += ' | ' + grep_chains[type] if [:drop, :drop_incoming, :drop_outgoing, :drop_banned].include?(type)
       cmd += " | egrep -o 'PROTO=(\\S+) SPT=(\\S+) DPT=(\\S+)'"
-      cmd += ' | sed \'s/SPT=\\S\+//\'' if type == :drop_incoming
-      cmd += ' | sed \'s/DPT=\\S\+//\'' if type == :drop_outgoing
+      cmd += ' | sed \'s/SPT=\\S\+\\s//\'' if type == :drop_incoming
+      cmd += ' | sed \'s/DPT=\\S\+\\s//\'' if type == :drop_outgoing
       cmd += sort_and_count_chain(count)
      # puts cmd
-      packetlines = `#{cmd}`.split("\n").map{|l|l = insert_servname(l); ' '*22 + l}
+      packetlines = `#{cmd}`.split("\n").map{|l|l = insert_servname(l); ' '*18 + l}
       puts packetlines.join("\n")
   end
 
@@ -82,7 +83,11 @@ class AnalyseIptables
     `#{cmd}`.split("\n").each do |line|
       count,ip_string = line.split
       ip = ip_string.gsub('SRC=','').gsub('DST=','')
-      puts '%5i: %16s (%s)' % [count,ip,ip2host(ip)]
+      if type == :banned
+        puts '%3i: %20s (%s)' % [count,ip_string,ip2host(ip)]
+      else
+        puts '%3i: %16s (%s)' % [count,ip,ip2host(ip)]
+      end
 
   #    puts ' ' * 20 + "Dropped Incoming:"
       puts_packets_for_IP(ip,:"drop_#{type}") if [:incoming, :outgoing, :banned].include?(type)
