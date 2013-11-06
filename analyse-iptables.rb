@@ -77,6 +77,8 @@ class AnalyseIptables
     cmd += sort_and_count_chain(10)
     # puts cmd
 
+    #TODO: Exclude the server's IP from the banned matches
+
     `#{cmd}`.split("\n").each do |line|
       count,ip_string = line.split
       ip = ip_string.gsub('SRC=','').gsub('DST=','')
