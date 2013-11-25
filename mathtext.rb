@@ -1,8 +1,5 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# MathText
-#Inspired by fliptext.rb (https://gist.github.com/FiXato/525297) and Sai's post on G+ https://plus.google.com/u/0/103112149634414554669/posts/V7zxyRYg2EB which mentioned Fraktur symbols in Unicode.
-begin
 
 # Hack to prevent useless iconv warning from showing up in 1.9
 oldverb = $VERBOSE; $VERBOSE = nil
@@ -17,17 +14,23 @@ LATIN_RANGES = {
 MATHEMATICAL_RANGES = {
   :bold => [119808..119833, 119834..119859],
   :italic => [119860..119885, 119886..119911],
-  :italic_bold => [119912..119937, 119938..119963],
+  :bold_italic => [119912..119937, 119938..119963],
 
   :script => [119964..119989, 119990..120015],
-  :script_bold => [120016..120041, 120042..120067],
+  :bold_script => [120016..120041, 120042..120067],
 
   :fraktur_bold => [120172..120197, 120198..120223],
   :fraktur => [120068..120093, 120094..120119],
+
+  :capital => [65..90, 65..90],
+  :small => [97..122, 97..122],
 }
 if ARGV.size < 2
-  abort("You need to supply a transliteration/conversion type and the text you want processed.\nSyntax: mathtext.rb conversionType text to process.\nExample: mathtext.rb script_bold This will appear in bold script unicode glyphs\n\nSupported conversion types: #{(LATIN_RANGES.keys + MATHEMATICAL_RANGES.keys).map{|k|k.to_s}.join(', ')}")
+  puts "Please specify the conversion type and your text. Supported converstion types are: #{MATHEMATICAL_RANGES.keys.sort.map{|k|k.to_s}.join(', ')}"
+  abort
 end
+begin
+
 translitator = Iconv.new("ASCII//TRANSLIT//IGNORE", "UTF-8")
 conversion = ARGV.shift.to_sym
 # puts conversion
@@ -49,6 +52,8 @@ input_text.each do |char|
   end
 end
 puts output
-rescue Exception
-  abort "error while running script"
+rescue Exception => e
+#  require 'yaml'
+#  puts e.to_yaml
+  abort "error while running script: #{e.message}"
 end
