@@ -145,3 +145,19 @@ Formats the output for the weather wrapper
 ### Dependencies:
 - *Ruby gems:*
   - barometer
+
+
+## weigher
+Keep track of your body weight and graph it over time using spark graphs and GNU Plot.
+
+### Usage: 
+`weigher.rb [--add] [--graphs]`
+
+### Examples:
+  - Get graphs of your recorded weights for the past month: `weigher --graphs`
+  - Enter your current weight and get the difference from your last measurement: `weigher --add`
+  - Get your last measurement: `weigher`
+
+### Dependencies:
+- http://gnuplot.sourceforge.net/
+- https://github.com/holman/spark
