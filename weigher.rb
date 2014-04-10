@@ -91,7 +91,7 @@ EOS
   end
 
   def add(weight, timestamp=Time.now)
-    history[timestamp] = weight
+    history[timestamp.utc] = weight
     sorted_history(true)
     difference rescue last_measurement
   end
@@ -109,20 +109,33 @@ EOS
   end
 end
 
-weigher = Weigher.new  
-if ARGV.include?('--graphs')
-  puts "Measurements: ", weigher.sorted_history.to_yaml, ""
-  puts "Spark graph:", weigher.history_spark, ""
-  puts "GNU Plot Graph: ", weigher.history_graph, ""
+@weigher = Weigher.new  
+
+def graphs?
+  if ARGV.include?('--graphs')
+    puts "Measurements: ", @weigher.sorted_history.to_yaml, ""
+    puts "Spark graph:", @weigher.history_spark, ""
+    puts "GNU Plot Graph: ", @weigher.history_graph, ""
+    puts "Lowest: #{@weigher.history.values.min}. Highest: #{@weigher.history.values.max}"
+  end
 end
 
-if weigher.sorted_history.size > 0
-  previous = weigher.last
-  puts "Your previous weight at #{previous.first} was: #{previous.last}"
+def previous?
+  if @weigher.sorted_history.size > 0
+    previous = @weigher.last
+    puts "Your previous weight at #{previous.first} was: #{previous.last}"
+  end
 end
 
-if ARGV.include?('--add')
-  difference = weigher.add_from_gets
-  puts "Difference: #{difference} Kg"
-  weigher.save
+def add?
+  if ARGV.include?('--add')
+    difference = @weigher.add_from_gets
+    puts "Difference: #{difference} Kg"
+    @weigher.save
+    graphs?
+  end
 end
+
+graphs?
+previous?
+add?
