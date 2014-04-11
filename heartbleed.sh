@@ -116,7 +116,7 @@ process_choice () {
 
 
 clear
-echo "This script will help you detect heartbleed."
+echo "This script will help you detect heartbleed vulnerabilities."
 while :
 do
   echo "$MENU_TEXT"
