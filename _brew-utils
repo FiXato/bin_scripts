@@ -1,0 +1,38 @@
+# Compilers
+brew install gcc --with-all-languages
+
+# Ruby and other scripting languages
+brew install rbenv ruby-build --HEAD && rbenv install 2.1.0-dev && rbenv global 2.1.0-dev
+brew install tcl-tk --with-x11 --enable-threads
+
+# Python & Python 2
+brew install python --universal --with-brewed-tk --with-poll --HEAD
+pip install docutils
+brew install python3 --universal --with-brewed-tk --HEAD
+pip3 install docutils
+brew linkapps
+
+# Version Control Systems
+brew install git
+brew install mercurial && brew unlink mercurial && brew install mercurial --HEAD --enabled-docs && brew cleanup mercurial
+brew install bash
+brew install bzr
+brew install subversion --java --perl --ruby --universal --with-python
+
+# File retrieval
+brew install curl --with-ares --with-gssapi --with-idn --with-libmetalink --with-rtmp --with-ssh
+brew install wget --enable-iri
+
+# Media conversion/retrieval
+brew install ffmpeg --with-fdk-aac --with-ffplay --with-freetype --with-frei0r --with-libass --with-libbluray --with-libcaca --with-libquvi --with-libvidstab --with-libvo-aacenc --with-libvorbis --with-libvpx --with-opencore-amr --with-openjpeg --with-openssl --with-opus --with-rtmpdump --with-schroedinger --with-speex --with-theora --with-tools --HEAD
+brew install imagemagick --with-jasper --with-liblqr --with-fontconfig --with-librsvg --with-libtiff --with-libwmf --with-little-cms --with-little-cms2 --with-openexr --with-perl --with-quantum-depth-32 --with-webp --with-x11
+brew install youtube-dl --with-rtmpdump
+
+# Wine
+brew install wine --with-libgsm --HEAD
+brew install winetricks --HEAD
+
+
+# Various
+brew install ack mtr homebrew/dupes/rsync htop-osx ssh-copy-id
+brew install mosh --stable
