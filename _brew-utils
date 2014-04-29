@@ -32,7 +32,10 @@ brew install youtube-dl --with-rtmpdump
 brew install wine --with-libgsm --HEAD
 brew install winetricks --HEAD
 
-
 # Various
 brew install ack mtr homebrew/dupes/rsync htop-osx ssh-copy-id
 brew install mosh --stable
+brew install figlet toilet cowsay fortune
+brew install libcaca --with-imlib2
+brew install aspell --all
+brew install weechat --with-aspell --with-guile --with-lua --with-perl --with-python --with-ruby --HEAD
