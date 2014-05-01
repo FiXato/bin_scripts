@@ -1,5 +1,13 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
+#
+# animate-per-folder
+# An ImageMagick animation conversion tool
+# (c) 2014, Filip H.F. "FiXato" Slagter,
+# FiXato Software Development, http://contact.fixato.org
+# Twitter: @FiXato
+# Google+: http://gplus.fixato.org
+#
 require 'fileutils'
 
 class String
