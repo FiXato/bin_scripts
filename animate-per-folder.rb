@@ -15,56 +15,116 @@ class String
   end
 end
 
-@dir = ARGV[ARGV.index('--path') + 1] if ARGV.include?('--path')
-@dir ||= '.'
-
-DEFAULT_ANIMATIONS_PATH = File.join(@dir, '_Animations')
-DEFAULT_INTERMEDIATE_PATH = File.join(@dir, '_Intermediate')
-DEFAULT_DELAYS = [16, 25, 40]
 DEFAULT_ANIMATION_DIMENSIONS = '1024x'
+DEFAULT_ANIMATIONS_DIR_NAME = '_Animations'
+DEFAULT_INTERMEDIATE_DIR_NAME = '_Intermediate'
+FILES_MASK = '[^_]*/*.{jpg,JPEG,JPG,png,PNG}' #Dirs starting with _ are excluded; only jpg's and png's are accepted for now
+PROFILES = {
+  'auto-awesome' => {
+    '--skip-existing' => true,
+    '--create-back2front-animation' => true,
+    '--delays' => '20,40',
+    '--animation-dimensions' => '1280x'
+  }
+}
+AVAILABLE_OPTIONS = {
+  flags: {
+    '--auto-awesome'                => 'sets a number of default flags and options.',
+    '--skip-existing'               => 'skip existing files. If an animation or intermediate file already exists, it will not be overwritten.',
+    '--create-intermediate-files'   => 'create intermediate files. It will copy all used frames to an intermediate files folder and rename them to include their index. Use this if you need to post-process the frames',
+    '--create-back2front-animation' => 'create a "back to front"-animation. Normally an animated gif will loop back to the first frame after it has reached the end. This option will add additional frames to reverse back to the front of the animation, for a smoother loop.',
+    '--skip-normal-animation'       => 'skip the creation of the normal animation. Useful if you only want to create a back-to-front animation.',
+    '--optimise'                    => 'try to optimise the animation using the "-layers optimize" ImageMagick argument.',
+    '--optimize'                    => 'see --optimise',
+  },
+  options: {
+    '--base-path'             => 'the base path from which this utility will search and in which it will create directories.',
+    '--delays'                => 'comma-separated list of delays to be used. An animation will be created for each delay specified.', 
+    '--animation-dimensions'  => 'target animation geometry dimensions in the form of WidtxHeight, where either can be left blank. Defaults to %s' % DEFAULT_ANIMATION_DIMENSIONS,
+    '--files-range'           => 'range of files to use. 50..100 will for instance drop anything up to the 50th file, and anything after the 100th file. 3,50 will use 50 files starting with the 3rd file, and -5...-1 will use the fifth last file up to the last file (non-inclusive).',
+    '--select-nth-frames'     => 'number of nth frames to select from the files list. 3 would for instance pick every 3rd frame, and drop the rest, thus reducing the number of frames by 2/3rd. Selection is applied after the files range (if specified).',
+    '--convert-args'          => 'additional convert args. If your args contain spaces, enclose the string with double quotes.',
+  }
+}
 
-def arg_from_param(key)
-  ARGV[ARGV.index(key) + 1] if ARGV.include?(key)
+def parse_profiles
+  if @options['--auto-awesome']
+    @options = PROFILES['auto-awesome'].merge(@options.reject{|k,v|v.nil?})
+  end
 end
 
-@delays = ARGV[ARGV.index('--delays') + 1].split(',') if ARGV.include?('--delays')
-@delays ||= DEFAULT_DELAYS
+def parse_options
+  @options = {}
+  AVAILABLE_OPTIONS[:flags].keys.each{|flag| @options[flag] = ARGV.delete(flag)}
+  AVAILABLE_OPTIONS[:options].keys.each{|option| @options[option] = option_from_param(option)}
+  parse_profiles
+  @options
+end
 
-@animation_dimensions = arg_from_param('--animation-dimensions')
-@animation_dimensions ||= DEFAULT_ANIMATION_DIMENSIONS
-puts "Animation dimensions set to #{@animation_dimensions}"
+def options
+  @options || parse_options
+end
 
-@trim_frames = arg_from_param('--trim-frames').to_i
-@frame_range = arg_from_param('--frame-range').to_range rescue nil
+def option_from_param(key)
+  return nil unless ARGV.include?(key)
+  ARGV[ARGV.index(key) + 1]
+end
 
-@convert_args = ' ' + arg_from_param('--convert-args')
-@convert_args ||= ''
+def base_dir
+  @base_dir ||= options['--base-path'] || '.'
+end
 
-def skip_existing?
-  return @skip_existing unless @skip_existing.nil? 
-  @skip_existing = ARGV.include?('--skip-existing')
+def animations_path
+  File.join(base_dir, DEFAULT_ANIMATIONS_DIR_NAME)
+end
+
+def intermediate_path
+  File.join(base_dir, DEFAULT_INTERMEDIATE_DIR_NAME)
+end
+
+
+def delays
+  @delays ||= (options['--delays'].split(',') || [nil])
+end
+
+def animation_dimensions
+  @animation_dimensions ||= options['--animation-dimensions'] || DEFAULT_ANIMATION_DIMENSIONS
+end
+
+def frames_to_select
+  @frames_to_select ||= options['--select-nth-frames'].to_i
+end
+
+def frame_range
+  @frame_range ||= options['--files-range'].to_range rescue nil
+end
+
+def additional_convert_args
+  options['--convert-args']
+end
+
+def skip_existing?(filepath)
+  options['--skip-existing'] and File.exist?(filepath)
 end
 
 def create_intermediate_files?
-  return @intermediate_files unless @intermediate_files.nil? 
-  @intermediate_files = ARGV.include?('--create-intermediate-files')
+  options['--create-intermediate-files']
 end  
 
 def create_back2front_animation?
-  return @create_back2front_animation unless @create_back2front_animation.nil? 
-  @create_back2front_animation = ARGV.include?('--create-back2front-animation')
+  options['--create-back2front-animation']
 end  
 
 def skip_normal_animation?
-  ARGV.include?('--skip-normal-animation')
+  options['--skip-normal-animation']
 end  
 
-def optimise
-  "-layers optimize " if ARGV.include?('--optimize') || ARGV.include?('--optimise')
+def optimise?
+  options['--optimise']||options['--optimize']
 end
 
 def create_intermediate_files(files, set_name, offset=0)
-  FileUtils.mkdir_p(File.join(DEFAULT_INTERMEDIATE_PATH, set_name))
+  FileUtils.mkdir_p(File.join(intermediate_path, set_name))
   intermediate_filepaths = []
 
   files.each_with_index do |f,index|
@@ -73,67 +133,84 @@ def create_intermediate_files(files, set_name, offset=0)
     new_filepath = File.join(intermediate_path, new_filename)
     intermediate_filepaths << File.expand_path(new_filepath)
 
-    if File.exist?(new_filepath) and skip_existing?
-      puts "Skipped #{new_filepath} because it already exists"
-      next
-    end
-
-    puts "Copying #{f} to #{new_filepath}"
-    FileUtils.cp(f, new_filepath)
+    puts "Skipped #{new_filepath} because it already exists" and next if skip_existing?(new_filepath)
+    puts "Copying #{f} to #{new_filepath}" and FileUtils.cp(f, new_filepath)
   end
 
   return intermediate_filepaths
 end
 
 def create_animation(files, delay, target_folder, prefix)
-  target_file = File.join(target_folder, "#{prefix}animation-#{delay}.gif")
-  if File.exist?(target_file) and skip_existing?
-    puts "Skipped #{target_file} because it already exists"
-    return false
+  puts "There are no input files specified for this animation" and return false if files.size < 1
+
+  animation_name = "#{prefix}animation"
+  animation_name += "-delay#{delay}" if delay
+  target_file = File.join(target_folder, animation_name + '.gif')
+
+  puts "Skipped #{target_file} because it already exists" and return false if skip_existing?(target_file)
+
+  puts "Will convert all #{files.size} frames into animation: #{target_file}"
+  command = ['convert']
+  command << additional_convert_args
+  command << '-layers optimize' if optimise?
+  command << "-delay #{delay}" if delay
+  files.each do |f|
+    file_string = '"%s"' % f
+    file_string += "[#{animation_dimensions}]" if animation_dimensions
+    command << file_string
   end
-  puts "Converting all #{files.size} frames into animation with #{delay}/100th delay stored at #{target_file}"
-  command = "convert#{@convert_args} #{optimise}-delay #{delay} #{files.map{|f|'"%s"[%s]' % [f, @animation_dimensions]}.join(' ')} -loop 0 \"#{target_file}\""
-  # puts command
+  command << '-loop 0'
+  command << '"%s"' % target_file
+  command = command.join(' ')
+  puts command
   puts `#{command}`
 end
 
 def create_animations_for_default_profiles(files, prefix)
-  animations_path = File.join(DEFAULT_ANIMATIONS_PATH)
   FileUtils.mkdir_p(animations_path)
-  @delays.each do |delay|
+  delays.each do |delay|
     create_animation(files, delay, animations_path, prefix)
   end
 end
 
 def animation_prefix(safe_folder_prefix,type)
   prefix = "#{safe_folder_prefix}-#{type}-"
-  prefix += "trimmed#{@trim_frames}-" if @trim_frames > 0
-  prefix += "#{@animation_dimensions}resize-" if @animation_dimensions
-  prefix += "range#{@frame_range}-" if @frame_range
+  prefix += "trimmed#{frames_to_select}-" if frames_to_select > 0
+  prefix += "resize#{animation_dimensions}-" if animation_dimensions
+  prefix += "range#{frame_range}-" if frame_range
+  prefix += "cropped-" if additional_convert_args.to_s.include?('-crop')
   prefix
 end
 
-#Dirs starting with _ are excluded; only jpg's and png's are accepted for now
-path = File.join(@dir, '[^_]*/*.{jpg,JPEG,JPG,png,PNG}') 
-files_per_folder = Dir.glob(path).group_by{|f|File.dirname(f).split(File::SEPARATOR).last}
-files_per_folder.each do |folder, files|
-  puts "Preparing #{files.size} files in #{folder}"
+def files_per_folder
+  Dir.glob(File.join(base_dir, FILES_MASK)).group_by{|f|File.dirname(f).split(File::SEPARATOR).last}
+end
 
-  if @frame_range
-    if @frame_range.kind_of?(Array)
-      files = files[*@frame_range]
-    elsif @frame_range.kind_of?(Range)
-      files = files[@frame_range]
+def limit_frame_range(files)
+  if frame_range
+    if frame_range.kind_of?(Array)
+      files = files[*frame_range]
+    elsif frame_range.kind_of?(Range)
+      files = files[frame_range]
     else
-      puts "#{@frame_range} is an incorrectly formatted range"
+      puts "#{frame_range} is an incorrectly formatted range"
     end
   end
-  if @trim_frames and @trim_frames > 0
-    files = files.select.with_index{|_,i| (i+1) % @trim_frames == 0}
-  end
-  files.map!{|f|File.expand_path(f)}
-  safe_folder_prefix = folder.gsub(/[^a-zA-Z0-9_'-]/, '')
+  files
+end
 
+def select_nth_frames(files)
+  return files if frames_to_select < 2
+  files.select.with_index{|_,i| (i+1) % frames_to_select == 0}
+end
+
+files_per_folder.each do |folder, files|
+  puts "Preparing #{files.size} files in #{folder}"
+  safe_folder_prefix = folder.gsub(/[^a-zA-Z0-9_'-]/, '')
+  
+  files = limit_frame_range(files)
+  files = select_nth_frames(files)
+  files.map!{|f|File.expand_path(f)}
   files = create_intermediate_files(files, folder) if create_intermediate_files?
 
   unless skip_normal_animation?
@@ -144,8 +221,8 @@ files_per_folder.each do |folder, files|
   if create_back2front_animation?
     offset = files.size
     reverse_files = files[1...-1].reverse
-    
-    reverse_files = files if reverse_files.size == 0 and skip_normal_animation?
+    reverse_files = files if reverse_files.size == 0 and skip_normal_animation? # ensure we can create a reverse animation if required
+
     if reverse_files.size > 0
       reverse_files = create_intermediate_files(reverse_files, folder, offset) if create_intermediate_files?
 
