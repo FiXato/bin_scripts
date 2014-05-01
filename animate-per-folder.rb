@@ -8,6 +8,13 @@
 # Twitter: @FiXato
 # Google+: http://gplus.fixato.org
 #
+# Example usage:
+# Convert all images in each sub-folder of the current directory, using the 'auto-awesome' profile
+#   (skip-existing, create-back2front-animation, 2 delays (20 & 40) and 1280x animation dimension):
+#   `animate-per-folder --auto-awesome`
+# which is equal to:
+#   `animate-per-folder --skip-existing --create-back2front-animation --delays 20,40 --animation-dimensions 1280x
+#
 require 'fileutils'
 
 class String
