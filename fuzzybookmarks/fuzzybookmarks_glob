@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Depends on fzb_function.sh being loaded, or the ENV vars being set.
+
+
+: "${FZB_LIST:? FZB_LIST cannot be empty. It needs to point to the fuzzybookmarks list path or command}"
+: "${FZB_GLOB:? FZB_GLOB cannot be empty. It needs to point to the fuzzybookmarks glob path or command}"
+: "${FZB_SYSTEMWIDE_BOOKMARKS:? FZB_SYSTEMWIDE_BOOKMARKS cannot be empty. It needs to point to the fuzzybookmarks system-wide bookmarks file}"
+: "${FZB_USER_BOOKMARKS:? FZB_USER_BOOKMARKS cannot be empty. It needs to point to the fuzzybookmarks user-specific bookmarks file}"
+
+
+system_wide_filelist=''
+user_filelist=''
+
+if [ -r $FZB_SYSTEMWIDE_BOOKMARKS ]; then
+   system_wide_filelist=$($FZB_LIST $FZB_SYSTEMWIDE_BOOKMARKS)
+fi
+if [ -r $FZB_USER_BOOKMARKS ]; then
+   user_filelist=$($FZB_LIST $FZB_USER_BOOKMARKS)
+fi
+
+echo -e "$system_wide_filelist\n$user_filelist" | sed '/^\s*$/d'
