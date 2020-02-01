@@ -4,6 +4,8 @@
 A bunch of ~/bin utilities for Linux (though most will probably work on Mac OS X too).
 Several of them will need Ruby as well as certain Ruby gems.
 
+This repository is no longer actively maintained for the moment, and certain tools (such as tog) that rely on webscraping, likely no longer work.
+
 ## age
 A CLI Ruby script that returns your (Terran) age in various descriptions, based on your date of birth.
 To get your own age, configure the script with your date (and possibly even hour!) of birth and call the script without any arguments.
